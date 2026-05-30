@@ -1,10 +1,10 @@
-# Catalog198x documentation
+# Cat198x documentation
 
-Documentation for [Catalog198x](https://github.com/catalog198x), the binary-asset
+Documentation for [Cat198x](https://github.com/cat198x), the binary-asset
 cataloguing tool.
 
 **Start here:** [`plan.md`](plan.md) — the rescue-and-evolve plan for turning the
-Romshelf rebuild into Catalog198x (rebrand → `assets/` integration → the
+Romshelf rebuild into Cat198x (rebrand → `assets/` integration → the
 TOSEC-PIX catalogue/verify/extract job).
 
 ## Scope

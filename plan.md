@@ -1,12 +1,12 @@
-# Catalog198x — plan
+# Cat198x — plan
 
 ## Bottom line
 
-Catalog198x **is** the existing Romshelf rebuild, renamed into the 198x family
+Cat198x **is** the existing Romshelf rebuild, renamed into the 198x family
 and evolved for its mission. Romshelf is already a mature, safety-first ROM
 manager — we keep all of it. The work is three things, in order:
 
-1. **Rebrand** `romshelf` → `catalog198x` (mechanical, one pass).
+1. **Rebrand** `romshelf` → `cat198x` (mechanical, one pass).
 2. **Make the 198x `assets/` library a first-class managed collection** — the
    bridge that turns a generic ROM manager into *the family's* asset tool.
 3. **The TOSEC-PIX job** — verify the scans, then *extract source material*:
@@ -14,7 +14,7 @@ manager — we keep all of it. The work is three things, in order:
    and the cultural material toward the Vault.
 
 This **resolves the open "how much rebuild" question** in the umbrella decision
-record ([`catalog198x-asset-tooling.md`](../../decisions/catalog198x-asset-tooling.md)):
+record ([`cat198x-asset-tooling.md`](../../decisions/cat198x-asset-tooling.md)):
 the answer is **rename + evolve, not rewrite**. The ~16k-LoC rebuild is good and
 stays. Any from-scratch replacement of a subsystem must be justified here first.
 
@@ -34,25 +34,25 @@ Romshelf, at `~/Projects/ROMShelf/romshelf` — a single-crate Rust CLI (edition
 | **Safety** | unknowns → **quarantine**; disk-space check before apply; Ctrl-C handling |
 | **Distribution** | `fetch` (DAT download over HTTP), `self_update` from GitHub releases, shell completions |
 
-The `plan → apply` split with dry-run + rollback already embodies Catalog198x's
+The `plan → apply` split with dry-run + rollback already embodies Cat198x's
 top bar: **never lose or misidentify a file.** We are not rebuilding that — we're
 inheriting it.
 
-## Phase 1 — Rebrand romshelf → catalog198x
+## Phase 1 — Rebrand romshelf → cat198x
 
 A single, mechanical rename pass. Land it as the first commit(s) in
-`catalog198x/catalog198x` after migrating the rebuild in.
+`cat198x/cat198x` after migrating the rebuild in.
 
-- **Crate + binary**: `romshelf` → `catalog198x`. (Open question below: the
+- **Crate + binary**: `romshelf` → `cat198x`. (Open question below: the
   binary name is long to type — decide on a short alias, e.g. `cat198`, before
   this lands, since renaming a published binary later is disruptive.)
-- **Cargo.toml**: `name`, `description`, `repository` → `catalog198x/catalog198x`,
+- **Cargo.toml**: `name`, `description`, `repository` → `cat198x/cat198x`,
   `keywords`/`categories` tweaked (cataloguing, preservation, not just "mame").
-- **Data dir**: `~/.romshelf` → `~/.catalog198x`; env vars `ROMSHELF_CONFIG` /
-  `ROMSHELF_DATA_DIR` → `CATALOG198X_*`. **Migrate, don't strand**: on first run,
+- **Data dir**: `~/.romshelf` → `~/.cat198x`; env vars `ROMSHELF_CONFIG` /
+  `ROMSHELF_DATA_DIR` → `CAT198X_*`. **Migrate, don't strand**: on first run,
   detect a legacy `~/.romshelf` and offer to move/copy it (the DB schema is
   unchanged, so this is a directory move).
-- **`self_update` target**: `romshelf/romshelf` releases → `catalog198x/catalog198x`.
+- **`self_update` target**: `romshelf/romshelf` releases → `cat198x/cat198x`.
 - **User-facing strings**: command `about` text, log lines, the `init` banner,
   `doctor` output.
 - **Tests**: the 1,932-LoC integration suite must stay green through the rename;
@@ -63,16 +63,16 @@ machinery — is untouched in this phase.
 
 ## Phase 2 — The 198x `assets/` library as a first-class collection
 
-This is what makes it *Catalog198x* rather than a generically-renamed Romshelf.
+This is what makes it *Cat198x* rather than a generically-renamed Romshelf.
 
 - The umbrella `198x/assets/` library (ROMs, OS disks, test suites, TOSEC sets)
-  becomes a **named Catalog198x collection** with a known destination layout, so
-  "the assets library" is something Catalog198x verifies and maintains by name,
+  becomes a **named Cat198x collection** with a known destination layout, so
+  "the assets library" is something Cat198x verifies and maintains by name,
   not an ad-hoc directory.
 - Define the **library-layout convention** (documented alongside this plan) that
   Emu198x expects when it reaches into `assets/` — so a verified collection lands
-  where the emulator looks for it. This is the Catalog198x → Emu198x contract.
-- Catalog198x **feeds** Emu198x; it does not emulate. The boundary stays clean.
+  where the emulator looks for it. This is the Cat198x → Emu198x contract.
+- Cat198x **feeds** Emu198x; it does not emulate. The boundary stays clean.
 
 Nothing here needs new core machinery — it's `source`/`config`/`plan` pointed at
 the family's own library with a settled layout. The new part is *documenting the
@@ -91,7 +91,7 @@ The first real job, and the one in flight (the downloads on the Time Capsule).
    verified, duplicated, missing.
 3. **Extract source material** — the novel, 198x-specific capability, and the
    reason TOSEC-PIX matters to the family. PIX is scanned manuals, magazines,
-   box art, and adverts. Catalog198x should **route** verified items by kind:
+   box art, and adverts. Cat198x should **route** verified items by kind:
    - **Manuals / magazines / datasheets** → staged for the `reference/`
      ingestion pipeline (then docling-extracted — this closes the loop with the
      reference-library work).
@@ -102,12 +102,12 @@ The first real job, and the one in flight (the downloads on the Time Capsule).
    command (e.g. `extract` / `route`) over the existing verified catalogue — not
    a change to the core. Keep it dry-run-first like `apply`.
 
-## Decisions to capture (in `catalog198x/decisions/`, once migrated)
+## Decisions to capture (in `cat198x/decisions/`, once migrated)
 
 - **Rebuild scope = rename + evolve** (ratifies the umbrella record's open
   question with this plan as the evidence).
-- **Data-dir migration** policy (`~/.romshelf` → `~/.catalog198x`).
-- **Binary name** (full `catalog198x` vs a short alias).
+- **Data-dir migration** policy (`~/.romshelf` → `~/.cat198x`).
+- **Binary name** (full `cat198x` vs a short alias).
 - **The `assets/` library-layout contract** with Emu198x.
 - **Extraction routing rules** — which TOSEC-PIX categories go to `reference/`
   vs the Vault, and in what staged form.
@@ -115,7 +115,7 @@ The first real job, and the one in flight (the downloads on the Time Capsule).
 ## Out of scope / open questions
 
 - **No rewrite of the core.** Scanner, DB schema, plan/apply, quarantine stay.
-- **Binary name** — `catalog198x` is correct-but-verbose; decide an alias.
+- **Binary name** — `cat198x` is correct-but-verbose; decide an alias.
 - **TOSEC-PIX DAT specifics** — verify archive-member hashing matches the PIX DAT
   before relying on verification (don't assume; test against a real PIX DAT).
 - **Extraction depth** — Phase 3's routing could stop at "stage the files for a
