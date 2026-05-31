@@ -83,10 +83,13 @@ layout as a contract* and treating the assets library as the canonical collectio
 The first real job, and the one in flight (the downloads on the Time Capsule).
 
 **On disk (observed 2026-05-31, Time Capsule `/Volumes/Data/TOSEC-PIX/`):** ~54
-top-level dirs by manufacturer/system (3DO, Acorn, Amstrad, …), each already split
-into `Books` / `Magazines` / `Manuals` / `Newsletters` plus per-machine subfolders.
-**No DAT files are co-located** in the tree — it's the unpacked scan set, not a
-DAT-paired one.
+top-level dirs by manufacturer/system (3DO, Acorn, Amstrad, … including regional
+machines like HomeLab and iQue that land squarely on the cultural-scope axis),
+each already split into `Books` / `Magazines` / `Manuals` / `Newsletters` plus
+per-machine subfolders. **~564 GB total** — large enough that Romshelf's
+resumable, streaming scan and its disk-space checks are load-bearing for this job,
+not optional niceties. **No DAT files are co-located** in the tree — it's the
+unpacked scan set, not a DAT-paired one.
 
 1. **Fetch the DATs, then verify.** Because the scan set has no DATs alongside it,
    first pull the matching TOSEC-PIX DAT pack (Romshelf's `fetch`/`dat`), then
