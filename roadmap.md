@@ -50,8 +50,11 @@ added from the `DatRoot` parent with `default_dest_path = /Volumes/Data` — see
 [`m0-canonical-dat-source.md`](m0-canonical-dat-source.md) for the decision and
 the post-scan procedure. Remaining is the operational sequence **`M0` verify/
 complete + `M4` rebuild + dry-run**, gated on the scan finishing (it saturates
-the AFP mount). Archive output formats (zip/TorrentZip) in `build_dest_path` are
-still a later step.
+the AFP mount).
+
+- **Archive output ✅** zip/TorrentZip collections now plan one archive per game
+  (canonical entry names, content-verified already-correct check, converges on
+  re-run). Loose remains the default for the TOSEC sets.
 
 ## Baseline (in flight, not a roadmap item)
 

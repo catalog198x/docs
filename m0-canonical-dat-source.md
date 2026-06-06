@@ -38,8 +38,22 @@ why the nested `DatRoot` is the source of truth rather than the flat pack.
 
 ## The open question: is `DatRoot` complete and aligned?
 
-`DatRoot/TOSEC-PIX` held ~1,103 DATs against the v2025-03-13 pack's 1,332. Two
-things must hold before the canonical rebuild (M4):
+`DatRoot` is a partial copy — measured 2026-06-06 against the v2025-03-13 pack:
+
+| Set | `DatRoot` | Pack | Gap |
+|-----|-----------|------|-----|
+| TOSEC | 2,609 | 3,111 | ~502 |
+| TOSEC-ISO | 271 | 300 | ~29 |
+| TOSEC-PIX | 1,103 | 1,332 | ~229 |
+| WHDLoad | 10 | 10 | 0 |
+
+Its nesting is the authoritative hierarchy and *encodes domain knowledge* that a
+plain name split does not: `Acorn BBC - Magazines - Laserbug` sits at
+`Acorn/BBC/Magazines/Laserbug` (the publisher/system boundary inside "Acorn BBC"
+has no delimiter), while `Sony - Books` sits at `Sony/Books`. Depth varies by
+set. This is exactly why the nested tree is the source of truth and why
+completing it from the flat pack is the step that needs care. Two things must
+hold before the canonical rebuild (M4):
 
 1. **Coverage** — `DatRoot` must contain a DAT for every collection present on
    disk under `/Volumes/Data/<set>/`. (Missing pack DATs that correspond to
