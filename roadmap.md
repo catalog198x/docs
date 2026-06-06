@@ -41,11 +41,17 @@ Landed on branch `feat/layout-engine`, in order, each its own tested commit:
 - **End-to-end ✅** one integration test composes the whole chain: recursive add
   → `set-default` → plan lands the ROM at `<default>/<hierarchy>/<rom>`.
 
-The layout engine is functionally complete for the loose sets. Remaining:
-**`M0`** (canonical DAT source — needs Steve's decision) and **`M4`** (live
-rebuild + dry-run), both gated on the scan finishing and not yet started because
-they touch the live catalogue. `Q3`/`Q4` remain optional/deferred. Archive output
-formats (zip/TorrentZip) in `build_dest_path` are still a later step.
+- **`Q3` ✅** `stats --group` rolls collections up by leading name segment.
+- **`Q4` ✅** `dat relink <dir>` re-points registrations whose DAT file moved.
+
+The layout engine is functionally complete for the loose sets, and all the
+quality items are in. **`M0` is now decided** — nested `DatRoot`, path-relative,
+added from the `DatRoot` parent with `default_dest_path = /Volumes/Data` — see
+[`m0-canonical-dat-source.md`](m0-canonical-dat-source.md) for the decision and
+the post-scan procedure. Remaining is the operational sequence **`M0` verify/
+complete + `M4` rebuild + dry-run**, gated on the scan finishing (it saturates
+the AFP mount). Archive output formats (zip/TorrentZip) in `build_dest_path` are
+still a later step.
 
 ## Baseline (in flight, not a roadmap item)
 
