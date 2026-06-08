@@ -178,6 +178,25 @@ Repoint moved DAT files without remove + add, clearing stale registrations (the
 25 missing FinalBurn Neo). General hygiene; `M4`'s rebuild sidesteps the immediate
 need, so defer unless wanted sooner. **Size:** M.
 
+### Q5 — Parallelise `apply` (concurrent repacks)  *(before the arcade phase)*
+
+`apply` runs operations strictly one at a time. Renames/relocates/deletes are
+metadata-cheap, but a **repack** is read-entry + recompress + write-zip + verify,
+each a round trip over the AFP mount — latency-bound at ~3 ops/s. The live TOSEC
+reorg's pass 2 was ~109k repacks ≈ **~10h** for only ~11 GB of data: the cost is
+per-file round trips, not bytes. Repacks are independent, so applying them
+concurrently (≈8–16 in flight) overlaps the network latency and should cut this
+to well under an hour.
+
+**Why now:** matters most before the **arcade phase** — MAME/FinalBurn romsets
+are almost entirely multi-ROM containers, so they generate far more repacks than
+TOSEC, where this would otherwise dominate the wall-clock.
+
+**Correctness constraints:** the rollback log and the apply-time catalogue-sync
+must stay correct under concurrency (both are per-op and independent, so this is
+a bounded-worker fan-out, not a redesign); keep the disk-space guard and the
+move-mode source deletion intact. Surfaced driving the live reorg. **Size:** M.
+
 ## Dependency view
 
 ```
