@@ -1,12 +1,12 @@
 # Roadmap: from verifier to reorganiser
 
-**Status:** Updated 2026-06-09. The reorganiser is **built and the TOSEC reorg
+**Status:** Updated 2026-06-12. The reorganiser is **built and the TOSEC reorg
 is executed** — not just planned. The critical path (`M0`–`M4`) and the quality
-items (`Q1`–`Q4`) all landed, and ~417,500 operations ran live against the AFP
+items (`Q1`–`Q5`) all landed, and ~417,500 operations ran live against the AFP
 volume to assemble `Library/ROMs/{TOSEC,TOSEC-ISO,TOSEC-PIX,WHDLoad}`. What
-remains is the **arcade phase** (the 359 GB `ToSort/` input) plus two polish
-items surfaced by the live run: `Q5` (parallelise `apply`, recommended before
-arcade) and `Q6` (WHDLoad layout/convergence, deferred). Design detail for the
+remains is the **arcade phase** (the 359 GB `ToSort/` input, plus the MAME
+0.288 Software List set newly copied to the volume) and one polish item:
+`Q6` (WHDLoad layout/convergence, deferred). Design detail for the
 layout engine lives in [`reorganise-layout-engine.md`](reorganise-layout-engine.md);
 this doc is the **order, dependencies, and acceptance** across all of it.
 
@@ -234,7 +234,16 @@ Repoint moved DAT files without remove + add, clearing stale registrations (the
 25 missing FinalBurn Neo). General hygiene; `M4`'s rebuild sidesteps the immediate
 need, so defer unless wanted sooner. **Size:** M.
 
-### Q5 — Parallelise `apply` (concurrent repacks)  *(before the arcade phase)*
+### Q5 — Parallelise `apply` (concurrent repacks)  *(✅ landed 2026-06-12, `df1d7db`)*
+
+> **Done.** `apply` gained `-j`/`--jobs` (default 8, max 64): consecutive
+> pending repacks batch and run on a bounded pool of worker threads, while the
+> rollback journal, plan status, and catalogue sync stay on the calling thread
+> in completion order (the rusqlite connection is not `Sync`). Any other
+> pending operation flushes the batch first, so plan ordering between repacks
+> and everything else is unchanged, as is dry-run. Workers run the same audited
+> `execute_repack` — verification and move-mode delete-after-verify intact.
+> The original rationale, kept as the design record:
 
 `apply` runs operations strictly one at a time. Renames/relocates/deletes are
 metadata-cheap, but a **repack** is read-entry + recompress + write-zip + verify,
@@ -278,25 +287,21 @@ Two linked WHDLoad issues found retrying the reorg's repack stragglers:
 Q1 ─┐
      ├─> M0 ─> M1 ─> M2 ─> M3 ─> M4   ✅ executed (TOSEC reorg done)
 Q2 ──────────────────┘ (folded in)
-Q3   ✅  Q4 ✅
-Q5   ── recommended before the arcade phase (parallelise apply)
+Q3   ✅  Q4 ✅  Q5 ✅ (parallelise apply — landed 2026-06-12)
 Q6   ── deferred (WHDLoad layout + extract convergence)
-arcade phase  ── next major reorg (ToSort/ ~359 GB), benefits from Q5
+arcade phase  ── next major reorg (ToSort/ ~359 GB + MAME 0.288 SL set)
 ```
 
 ## Original goal: delivered — what's next
 
 The in-place tidy you asked for was `M4`, and it ran: the TOSEC/ISO/PIX/WHDLoad
-sets are reorganised in place, ~417,500 operations applied and verified. The
+sets are reorganised in place, ~417,500 operations applied and verified. `Q5`
+(concurrent repacks) landed 2026-06-12, clearing the arcade phase's gate. The
 forward path is:
 
-1. **`Q5` — parallelise `apply`.** The arcade romsets are overwhelmingly
-   multi-ROM containers, so they generate far more repacks than TOSEC. At the
-   current ~3 repacks/s that would dominate wall-clock; bounded-concurrent
-   repacks should cut it to well under an hour. Recommended **before** the arcade
-   phase.
-2. **Arcade phase.** Reorganise `ToSort/` (~359 GB: MAME / FinalBurn Neo / Demul
-   / Raine + WOS-Archive) into `Library/ROMs`. The reorg engine is proven; this
-   is mostly input scale and the repack volume `Q5` addresses.
-3. **`Q6` — WHDLoad layout + convergence.** Tidy the deferred WHDLoad
+1. **Arcade phase.** Reorganise `ToSort/` (~359 GB: MAME / FinalBurn Neo / Demul
+   / Raine + WOS-Archive, plus the MAME 0.288 Software List ROMs copied to the
+   volume 2026-06-12) into `Library/ROMs`. The reorg engine is proven; this is
+   mostly input scale, and the repack volume now runs `-j 8`-wide.
+2. **`Q6` — WHDLoad layout + convergence.** Tidy the deferred WHDLoad
    category-level layout and the non-converging extract re-list. Non-blocking.
