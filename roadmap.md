@@ -1,14 +1,37 @@
 # Roadmap: from verifier to reorganiser
 
-**Status:** Updated 2026-06-12. The reorganiser is **built and the TOSEC reorg
+**Status:** Updated 2026-06-13. The reorganiser is **built and the TOSEC reorg
 is executed** — not just planned. The critical path (`M0`–`M4`) and the quality
 items (`Q1`–`Q5`) all landed, and ~417,500 operations ran live against the AFP
-volume to assemble `Library/ROMs/{TOSEC,TOSEC-ISO,TOSEC-PIX,WHDLoad}`. What
-remains is the **arcade phase** (the 359 GB `ToSort/` input, plus the MAME
-0.288 Software List set newly copied to the volume) and one polish item:
-`Q6` (WHDLoad layout/convergence, deferred). Design detail for the
-layout engine lives in [`reorganise-layout-engine.md`](reorganise-layout-engine.md);
-this doc is the **order, dependencies, and acceptance** across all of it.
+volume to assemble `Library/ROMs/{TOSEC,TOSEC-ISO,TOSEC-PIX,WHDLoad}`. The
+**arcade phase** is in progress: CHD support shipped, but `plan` is **blocked**
+on a planner-performance bug at arcade scale (`Q7` below) — it hangs on large
+*merged* sets (FBNeo Arcade, MAME ROMs merged). Also open: `Q6` (WHDLoad
+layout/convergence, deferred). Design detail for the layout engine lives in
+[`reorganise-layout-engine.md`](reorganise-layout-engine.md); this doc is the
+**order, dependencies, and acceptance** across all of it.
+
+## Arcade phase — status (2026-06-13)
+
+Scanned and catalogued into `~/.cat198x`: MAME (ROMs/Extras/Multimedia + CHDs),
+the **MAME 0.288 Software List** set (712 collections, 234,485 entries), Demul,
+Raine, FinalBurn Neo. **CHD support landed** (commits `2bdfd7a`, `7ccf228`,
+`c6cdd9a`, `b5cfa9c` on `main`): the DAT parser reads `<disk>` elements, the
+scanner identifies a `.chd` by its **internal header SHA1** (CHD v5, header
+offset 84) — read from the header only, never the multi-GB body — and the
+planner stores CHDs **loose** at `<dest>/<game>/<name>.chd`, never packed.
+Verified: 209 CHDs matched (MAME 103 + Demul 106) and the partial plan placed
+them correctly (`106 CHD(s)… to move`). Also fixed: `fix(scan)` so numeric
+`--source` ids select exactly (`c6bdd88`).
+
+**Blocker (`Q7`).** A full `--move` plan over the arcade sets ran ~2h23m and
+hung on **`FinalBurn Neo - Arcade Games`** (100 min CPU, then AFP I/O wait,
+never returned). The upfront scan reported **86,911 shared contents** and
+**103,802 containers sourcing multiple games** — merged arcade sets share ROMs
+wall-to-wall (Neo-Geo BIOS, CPS clones). The archive branch's per-game
+container-completeness check (`is_complete` × candidate containers) goes
+quadratic at that scale. Small sets plan fine (`32x`, `Demul`); the big merged
+sets do not. **Next session: fix `Q7` before re-running the arcade plan.**
 
 ## Bottom line
 
@@ -281,6 +304,25 @@ Two linked WHDLoad issues found retrying the reorg's repack stragglers:
    (1) likely fixes (2); otherwise register the dest root (or the whole
    `Library/ROMs`) as a source so placed files catalogue and converge. **Size:** M.
 
+### Q7 — Planner performance on merged arcade sets  *(BLOCKER — surfaced 2026-06-13)*
+
+`plan` hangs on large *merged* arcade collections. A `--move` plan over the
+arcade sets ran 2h23m and never got past `FinalBurn Neo - Arcade Games` (100 min
+CPU, then AFP I/O wait). Root cause: merged arcade DATs share ROMs across
+parent/clone wall-to-wall — the run reported **86,911 shared contents** and
+**103,802 multi-game containers**. The archive branch in `generator.rs` resolves
+each game's canonical container by scanning candidate containers and running
+`is_complete` (expected entries × container entries) per game; with thousands of
+games each sharing many containers this is effectively O(games × containers) and
+does not finish. Small sets (`32x`, `Demul`, `Raine`) plan in seconds; the big
+merged sets (FBNeo Arcade, MAME ROMs merged) do not.
+
+**Fix direction:** precompute a sha1 → containers (and container → entries) index
+once, so per-game completeness is a lookup, not a scan; and/or short-circuit the
+"complete container already at dest" case before the candidate scan. Likely also
+revisit `compute_shared_containers` cost. **Acceptance:** a full arcade `--move`
+plan completes in minutes. **Size:** M–L. **Do before re-running the arcade plan.**
+
 ## Dependency view
 
 ```
@@ -288,8 +330,10 @@ Q1 ─┐
      ├─> M0 ─> M1 ─> M2 ─> M3 ─> M4   ✅ executed (TOSEC reorg done)
 Q2 ──────────────────┘ (folded in)
 Q3   ✅  Q4 ✅  Q5 ✅ (parallelise apply — landed 2026-06-12)
+CHD support ✅ (2026-06-13: <disk> parse + internal-SHA1 scan + loose layout)
 Q6   ── deferred (WHDLoad layout + extract convergence)
-arcade phase  ── next major reorg (ToSort/ ~359 GB + MAME 0.288 SL set)
+Q7   ── BLOCKER: planner perf on merged arcade sets (fix before arcade plan)
+arcade phase  ── Q7 ─> full plan ─> apply (ToSort/ ~359 GB + MAME 0.288 SL set)
 ```
 
 ## Original goal: delivered — what's next
